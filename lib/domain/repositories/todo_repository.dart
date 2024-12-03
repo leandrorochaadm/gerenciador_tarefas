@@ -1,7 +1,7 @@
 import '../entities/todo_item.dart';
 
 abstract class TodoRepository {
-  Future<List<TodoItemEntity>> getTodoList();
+  Future<List<TodoItemEntity>> getTodos();
 
   Future<void> postTodoItem(TodoItemEntity todoItem);
 

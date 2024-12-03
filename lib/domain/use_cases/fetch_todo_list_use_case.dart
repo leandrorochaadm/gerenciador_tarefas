@@ -1,19 +1,23 @@
 import 'package:inicie/domain/repositories/todo_repository.dart';
 
 import '../entities/todo_item.dart';
+import '../failures/failure.dart';
 
 class FetchTodoListUseCase {
   final TodoRepository repository;
 
   FetchTodoListUseCase(this.repository);
-  Future<(String?, List<TodoItemEntity>)> call() async {
+  Future<(Failure?, List<TodoItemEntity>?)> call() async {
     try {
-      final todoList = await repository.getTodoList();
+      final todoList = await repository.getTodos();
+      if (todoList.isEmpty) {
+        return (NotFoundFailure('Lista de tarefas vazia'), null);
+      }
       return (null, todoList);
-    } catch (e) {
+    } catch (_) {
       return (
-        'Não foi possivel carregar a lista de tarefas',
-        <TodoItemEntity>[]
+        ServerFailure('Não foi possivel carregar a lista de tarefas'),
+        null
       );
     }
   }
