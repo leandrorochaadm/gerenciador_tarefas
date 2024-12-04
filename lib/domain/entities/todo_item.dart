@@ -9,9 +9,10 @@ class TodoItemEntity {
   TodoItemEntity({
     int? id,
     required this.title,
-    this.description = '',
+    String? description = '',
     this.isDone = false,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch;
+  })  : id = id ?? DateTime.now().millisecondsSinceEpoch,
+        description = description ?? '';
 
   factory TodoItemEntity.fromModel(TodoItemModel todoItemModel) {
     return TodoItemEntity(
