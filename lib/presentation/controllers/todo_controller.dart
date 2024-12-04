@@ -18,7 +18,9 @@ class TodoController extends ValueNotifier<TodoState> {
     required this.createTodoUseCase,
     required this.updateTodoUseCase,
     required this.deleteTodoUseCase,
-  }) : super(TodoInitial());
+  }) : super(TodoInitial()) {
+    fetchTodos();
+  }
 
   Future<void> fetchTodos() async {
     value = TodoLoading();
@@ -35,14 +37,16 @@ class TodoController extends ValueNotifier<TodoState> {
     }
   }
 
-  Future<void> createTodo(String title, {String? description}) async {
+  Future<void> createTodo(String title,
+      {String? description, bool? isDone}) async {
     if (title.isEmpty) {
       value = TodoError('O título é obrigatório.');
       return;
     }
 
     value = TodoLoading();
-    final failure = await createTodoUseCase(title, description: description);
+    final failure = await createTodoUseCase(title,
+        description: description, isDone: isDone);
 
     if (failure != null) {
       value = TodoError(failure.message);

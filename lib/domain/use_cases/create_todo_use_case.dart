@@ -7,7 +7,8 @@ class CreateTodoUseCase {
   final TodoRepository repository;
 
   CreateTodoUseCase(this.repository);
-  Future<Failure?> call(String title, {String? description}) async {
+  Future<Failure?> call(String title,
+      {String? description, bool? isDone}) async {
     if (title.isEmpty) {
       return Failure('O título é obrigatório.');
     }
@@ -16,6 +17,7 @@ class CreateTodoUseCase {
       final todo = TodoItemEntity(
         title: title,
         description: description,
+        isDone: isDone,
       );
 
       await repository.postTodoItem(todo);

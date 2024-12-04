@@ -13,7 +13,9 @@ class TodoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tarefas')),
+      appBar: AppBar(
+        title: const Text('Tarefas'),
+      ),
       body: ValueListenableBuilder<TodoState>(
         valueListenable: controller,
         builder: (context, state, child) {
@@ -22,39 +24,7 @@ class TodoPage extends StatelessWidget {
           } else if (state is TodoLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is TodoLoaded) {
-            return ListView.builder(
-              itemCount: state.todos.length,
-              itemBuilder: (context, index) {
-                final todo = state.todos[index];
-                return ListTile(
-                  title: Text(todo.title),
-                  subtitle: Text(todo.description),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          todo.isDone ? Icons.check : Icons.pending,
-                          color: todo.isDone ? Colors.green : Colors.orange,
-                        ),
-                        onPressed: () {
-                          _showEditTodoModal(context, controller, todo);
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _showDeleteTodoModal(context, controller, todo);
-                        },
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    _showEditTodoModal(context, controller, todo);
-                  },
-                );
-              },
-            );
+            return _buildTodoList(context, state.todos);
           } else if (state is TodoEmpty) {
             return const Center(child: Text('Nenhuma tarefa encontrada.'));
           } else if (state is TodoError) {
@@ -87,14 +57,76 @@ class TodoPage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildTodoList(BuildContext context, List<TodoItemEntity> todos) {
+    return ListView.separated(
+      itemCount: todos.length,
+      separatorBuilder: (_, __) => const Divider(),
+      itemBuilder: (context, index) {
+        final todo = todos[index];
+        return ListTile(
+          leading: Icon(
+            todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: todo.isDone ? Colors.green : Colors.orange,
+          ),
+          title: Text(todo.title),
+          subtitle: Text(todo.description),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () {
+                  _showEditTodoModal(context, controller, todo);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  _showDeleteTodoModal(context, controller, todo);
+                },
+              ),
+            ],
+          ),
+          onTap: () {
+            _showEditTodoModal(context, controller, todo);
+          },
+        );
+      },
+    );
+  }
+}
+
+void _showModal(BuildContext context, {required Widget child}) {
+  Navigator.of(context).push(PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return child;
+    },
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOut;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(position: offsetAnimation, child: child);
+    },
+  ));
 }
 
 void _showCreateTodoModal(BuildContext context, TodoController controller) {
-  showDialog(
-    context: context,
-    builder: (context) => TodoModal(
+  _showModal(
+    context,
+    child: TodoModal(
       onSubmit: (title, description, isDone) {
-        controller.createTodo(title, description: description);
+        controller.createTodo(title, description: description, isDone: isDone);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tarefa criada com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       },
     ),
   );
@@ -105,9 +137,9 @@ void _showEditTodoModal(
   TodoController controller,
   TodoItemEntity todo,
 ) {
-  showDialog(
-    context: context,
-    builder: (context) => TodoModal(
+  _showModal(
+    context,
+    child: TodoModal(
       todo: todo,
       onSubmit: (title, description, isDone) {
         final updatedTodo = TodoItemEntity(
@@ -117,36 +149,57 @@ void _showEditTodoModal(
           isDone: isDone,
         );
         controller.updateTodo(updatedTodo);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tarefa atualizada com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       },
     ),
   );
 }
 
 void _showDeleteTodoModal(
-    BuildContext context, TodoController controller, TodoItemEntity todo) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: Text(
-            'Você tem certeza que deseja excluir a tarefa "${todo.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar'),
+  BuildContext context,
+  TodoController controller,
+  TodoItemEntity todo,
+) {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      opaque: false,
+      barrierColor: Colors.black54,
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: AlertDialog(
+              title: const Text('Confirmar Exclusão'),
+              content: Text(
+                  'Você tem certeza que deseja excluir a tarefa "${todo.title}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    controller.deleteTodo(todo.id);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Excluir'),
+                ),
+              ],
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              controller.deleteTodo(todo.id);
-              Navigator.pop(context);
-            },
-            child: const Text('Excluir'),
-          ),
-        ],
-      );
-    },
+        );
+      },
+    ),
   );
 }

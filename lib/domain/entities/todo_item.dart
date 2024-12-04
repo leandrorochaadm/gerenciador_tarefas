@@ -10,9 +10,10 @@ class TodoItemEntity {
     int? id,
     required this.title,
     String? description = '',
-    this.isDone = false,
+    bool? isDone,
   })  : id = id ?? DateTime.now().millisecondsSinceEpoch,
-        description = description ?? '';
+        description = description ?? '',
+        isDone = isDone ?? false;
 
   factory TodoItemEntity.fromModel(TodoItemModel todoItemModel) {
     return TodoItemEntity(
