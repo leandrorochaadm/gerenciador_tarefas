@@ -29,9 +29,25 @@ class TodoPage extends StatelessWidget {
                 return ListTile(
                   title: Text(todo.title),
                   subtitle: Text(todo.description),
-                  trailing: Icon(
-                    todo.isDone ? Icons.check : Icons.pending,
-                    color: todo.isDone ? Colors.green : Colors.orange,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          todo.isDone ? Icons.check : Icons.pending,
+                          color: todo.isDone ? Colors.green : Colors.orange,
+                        ),
+                        onPressed: () {
+                          _showEditTodoModal(context, controller, todo);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          _showDeleteTodoModal(context, controller, todo);
+                        },
+                      ),
+                    ],
                   ),
                   onTap: () {
                     _showEditTodoModal(context, controller, todo);
@@ -103,5 +119,34 @@ void _showEditTodoModal(
         controller.updateTodo(updatedTodo);
       },
     ),
+  );
+}
+
+void _showDeleteTodoModal(
+    BuildContext context, TodoController controller, TodoItemEntity todo) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: Text(
+            'Você tem certeza que deseja excluir a tarefa "${todo.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              controller.deleteTodo(todo.id);
+              Navigator.pop(context);
+            },
+            child: const Text('Excluir'),
+          ),
+        ],
+      );
+    },
   );
 }
