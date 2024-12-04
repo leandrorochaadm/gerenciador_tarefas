@@ -16,38 +16,41 @@ class TodoPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Tarefas'),
       ),
-      body: ValueListenableBuilder<TodoState>(
-        valueListenable: controller,
-        builder: (context, state, child) {
-          if (state is TodoInitial) {
-            return const Center(child: Text('Bem-vindo!'));
-          } else if (state is TodoLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is TodoLoaded) {
-            return _buildTodoList(context, state.todos);
-          } else if (state is TodoEmpty) {
-            return const Center(child: Text('Nenhuma tarefa encontrada.'));
-          } else if (state is TodoError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    state.message,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: controller.fetchTodos,
-                    child: const Text('Tentar Novamente'),
-                  ),
-                ],
-              ),
-            );
-          }
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ValueListenableBuilder<TodoState>(
+          valueListenable: controller,
+          builder: (context, state, child) {
+            if (state is TodoInitial) {
+              return const Center(child: Text('Bem-vindo!'));
+            } else if (state is TodoLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is TodoLoaded) {
+              return _buildTodoList(context, state.todos);
+            } else if (state is TodoEmpty) {
+              return const Center(child: Text('Nenhuma tarefa encontrada.'));
+            } else if (state is TodoError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: controller.fetchTodos,
+                      child: const Text('Tentar Novamente'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return const SizedBox();
-        },
+            return const SizedBox();
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -61,36 +64,37 @@ class TodoPage extends StatelessWidget {
   Widget _buildTodoList(BuildContext context, List<TodoItemEntity> todos) {
     return ListView.separated(
       itemCount: todos.length,
-      separatorBuilder: (_, __) => const Divider(),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final todo = todos[index];
-        return ListTile(
-          leading: Icon(
-            todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: todo.isDone ? Colors.green : Colors.orange,
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: ListTile(
+            leading: Icon(
+              todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: todo.isDone ? Colors.green : Colors.orange,
+            ),
+            title: Text(todo.title),
+            subtitle: Text(todo.description),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () {
+                    _showEditTodoModal(context, controller, todo);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    _showDeleteTodoModal(context, controller, todo);
+                  },
+                ),
+              ],
+            ),
           ),
-          title: Text(todo.title),
-          subtitle: Text(todo.description),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
-                onPressed: () {
-                  _showEditTodoModal(context, controller, todo);
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  _showDeleteTodoModal(context, controller, todo);
-                },
-              ),
-            ],
-          ),
-          onTap: () {
-            _showEditTodoModal(context, controller, todo);
-          },
         );
       },
     );
