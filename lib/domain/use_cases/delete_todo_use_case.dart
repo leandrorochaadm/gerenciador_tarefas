@@ -1,22 +1,23 @@
 import '../../data/exceptions/repository_exceptions.dart';
-import '../entities/todo_item.dart';
 import '../failures/failure.dart';
 import '../repositories/todo_repository.dart';
 
-class UpdateTodoListUseCase {
+class DeleteTodoUseCase {
   final TodoRepository repository;
 
-  UpdateTodoListUseCase(this.repository);
-  Future<Failure?> call(TodoItemEntity todoItem) async {
+  DeleteTodoUseCase(this.repository);
+  Future<Failure?> call(int todoItemId) async {
+    if (todoItemId <= 0) {
+      return (Failure('Informe o id da tarefa'));
+    }
+
     try {
-      await repository.putTodoItem(todoItem);
+      await repository.deleteTodoItem(todoItemId);
       return null;
     } on InvalidInputRepositoryException {
       return (Failure('Parâmetros inválidos'));
-    } on ResourceNotFoundInRepositoryException {
-      return (Failure('Tarefa nao encontrada'));
-    } on UpdateRepositoryException {
-      return (Failure('Não foi possivel atualizar a tarefa'));
+    } on DeleteRepositoryException {
+      return (Failure('Não foi possivel excluir a tarefa'));
     } on RepositoryException catch (_) {
       return (Failure('Falha na fonte de dados'));
     } catch (e) {

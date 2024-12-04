@@ -4,10 +4,10 @@ import '../../data/exceptions/repository_exceptions.dart';
 import '../entities/todo_item.dart';
 import '../failures/failure.dart';
 
-class FetchTodoListUseCase {
+class FetchTodosUseCase {
   final TodoRepository repository;
 
-  FetchTodoListUseCase(this.repository);
+  FetchTodosUseCase(this.repository);
 
   Future<(Failure?, List<TodoItemEntity>?)> call() async {
     try {
