@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:inicie/setup_service_locator.dart';
 
 import '../../domain/entities/todo_item.dart';
 import '../controllers/todo_controller.dart';
+import '../controllers/todo_form_controller.dart';
 import '../states/todo_state.dart';
-import '../widgets/create_todo_modal.dart';
+import 'create_or_edit_todo_page.dart';
 
 class TodoPage extends StatelessWidget {
   final TodoController controller;
@@ -54,7 +56,9 @@ class TodoPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showCreateTodoModal(context, controller);
+          final controller = getIt<TodoFormController>();
+
+          navigateToCreateOrEditTodoPage(context, controller);
         },
         child: const Icon(Icons.add),
       ),
@@ -83,7 +87,9 @@ class TodoPage extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () {
-                    _showEditTodoModal(context, controller, todo);
+                    final controller = getIt<TodoFormController>(param1: todo);
+
+                    navigateToCreateOrEditTodoPage(context, controller);
                   },
                 ),
                 IconButton(
@@ -99,69 +105,6 @@ class TodoPage extends StatelessWidget {
       },
     );
   }
-}
-
-void _showModal(BuildContext context, {required Widget child}) {
-  Navigator.of(context).push(PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) {
-      return child;
-    },
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(0.0, 1.0);
-      const end = Offset.zero;
-      const curve = Curves.easeInOut;
-
-      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-      var offsetAnimation = animation.drive(tween);
-
-      return SlideTransition(position: offsetAnimation, child: child);
-    },
-  ));
-}
-
-void _showCreateTodoModal(BuildContext context, TodoController controller) {
-  _showModal(
-    context,
-    child: TodoModal(
-      onSubmit: (title, description, isDone) {
-        controller.createTodo(title, description: description, isDone: isDone);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tarefa criada com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      },
-    ),
-  );
-}
-
-void _showEditTodoModal(
-  BuildContext context,
-  TodoController controller,
-  TodoItemEntity todo,
-) {
-  _showModal(
-    context,
-    child: TodoModal(
-      todo: todo,
-      onSubmit: (title, description, isDone) {
-        final updatedTodo = TodoItemEntity(
-          id: todo.id,
-          title: title,
-          description: description,
-          isDone: isDone,
-        );
-        controller.updateTodo(updatedTodo);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tarefa atualizada com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      },
-    ),
-  );
 }
 
 void _showDeleteTodoModal(
@@ -201,6 +144,34 @@ void _showDeleteTodoModal(
                 ),
               ],
             ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+void navigateToCreateOrEditTodoPage(
+    BuildContext context, TodoFormController controller) {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return CreateOrEditTodoPage(controller: controller);
+      },
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0); // Começa de baixo para cima
+        const end = Offset.zero; // Termina na posição original
+        const curve = Curves.easeInOut; // Curva de animação suave
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
           ),
         );
       },
