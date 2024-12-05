@@ -25,6 +25,12 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
   String get appBarTitle =>
       _isNewTodoForm ? 'Criar Nova Tarefa' : 'Editar Tarefa';
   String get buttonSubmitText => _isNewTodoForm ? 'Salvar' : 'Atualizar';
+
+  bool get isFormValid =>
+      value.titleError == null &&
+      value.descriptionError == null &&
+      value.formErrorMessage == null;
+
   void setInitialValues() {
     value = TodoFormState(
       title: todoItem?.title ?? '',
@@ -69,7 +75,7 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
   Future<void> submit() async {
     if (validateForm()) {
       Failure? failure;
-      if (todoItem == null) {
+      if (_isNewTodoForm) {
         failure = await createTodoUseCase(
           value.title,
           description: value.description,

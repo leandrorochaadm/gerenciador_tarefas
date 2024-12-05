@@ -25,11 +25,11 @@ class TodoFormState {
   }) {
     return TodoFormState(
       title: title ?? this.title,
-      titleError: titleError ?? this.titleError,
+      titleError: titleError,
       description: description ?? this.description,
-      descriptionError: descriptionError ?? this.descriptionError,
+      descriptionError: descriptionError,
       isDone: isDone ?? this.isDone,
-      formErrorMessage: formErrorMessage ?? this.formErrorMessage,
+      formErrorMessage: formErrorMessage,
     );
   }
 }

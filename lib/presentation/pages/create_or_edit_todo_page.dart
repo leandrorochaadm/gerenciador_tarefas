@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:inicie/presentation/pages/todo_page.dart';
 
+import '../../setup_service_locator.dart';
+import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_form_state.dart';
 
@@ -55,8 +58,8 @@ class CreateOrEditTodoPage extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () async {
                     await controller.submit();
-                    if (formState.formErrorMessage != null) {
-                      Navigator.pop(context);
+                    if (controller.isFormValid) {
+                      navigateToCreateOrEditTodoPage(context);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -75,4 +78,31 @@ class CreateOrEditTodoPage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> navigateToCreateOrEditTodoPage(BuildContext context) async {
+  await Navigator.of(context).pushReplacement(
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return TodoPage(controller: getIt.get<TodoController>());
+      },
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0); // Começa de baixo para cima
+        const end = Offset.zero; // Termina na posição original
+        const curve = Curves.easeInOut; // Curva de animação suave
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+        );
+      },
+    ),
+  );
 }

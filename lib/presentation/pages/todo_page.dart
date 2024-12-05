@@ -152,8 +152,10 @@ void _showDeleteTodoModal(
 }
 
 void navigateToCreateOrEditTodoPage(
-    BuildContext context, TodoFormController controller) {
-  Navigator.of(context).push(
+  BuildContext context,
+  TodoFormController controller,
+) {
+  Navigator.of(context).pushReplacement(
     PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) {
         return CreateOrEditTodoPage(controller: controller);
