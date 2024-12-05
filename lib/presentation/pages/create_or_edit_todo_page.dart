@@ -119,25 +119,6 @@ class CreateOrEditTodoPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Status:',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Switch.adaptive(
-                      value: formState.isDone,
-                      onChanged: controller.toggleIsDone,
-                      activeColor: Colors.blue,
-                      activeTrackColor: Colors.blueAccent,
-                      inactiveThumbColor: Colors.grey,
-                      inactiveTrackColor: Colors.grey[300],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
