@@ -30,8 +30,41 @@ class CreateOrEditTodoPage extends StatelessWidget {
                   initialValue: formState.title,
                   decoration: InputDecoration(
                     labelText: 'Título',
+                    labelStyle:
+                        const TextStyle(fontSize: 16, color: Colors.grey),
+                    hintText: 'Digite o título da tarefa',
+                    hintStyle: const TextStyle(color: Colors.grey),
                     errorText: formState.titleError,
+                    errorStyle:
+                        const TextStyle(color: Colors.redAccent, fontSize: 14),
+                    prefixIcon:
+                        const Icon(Icons.title, color: Colors.blueAccent),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.grey, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.blueAccent, width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.redAccent, width: 2),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.redAccent, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 16),
                   ),
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -39,37 +72,93 @@ class CreateOrEditTodoPage extends StatelessWidget {
                   initialValue: formState.description,
                   decoration: InputDecoration(
                     labelText: 'Descrição',
+                    labelStyle:
+                        const TextStyle(fontSize: 16, color: Colors.grey),
+                    hintText: 'Digite a descrição aqui',
+                    hintStyle: const TextStyle(color: Colors.grey),
                     errorText: formState.descriptionError,
+                    errorStyle: const TextStyle(color: Colors.redAccent),
+                    prefixIcon:
+                        const Icon(Icons.description, color: Colors.blueAccent),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.grey, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.blueAccent, width: 2),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.redAccent, width: 2),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Colors.redAccent, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 16),
                   ),
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                   maxLines: 3,
                 ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Status:'),
-                    Switch(
+                    const Text(
+                      'Status:',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Switch.adaptive(
                       value: formState.isDone,
                       onChanged: controller.toggleIsDone,
+                      activeColor: Colors.green,
+                      activeTrackColor: Colors.greenAccent,
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Colors.grey[300],
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    await controller.submit();
-                    if (controller.isFormValid) {
-                      navigateToCreateOrEditTodoPage(context);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(formState.formErrorMessage!),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(controller.buttonSubmitText),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          navigateToCreateOrEditTodoPage(context);
+                        },
+                        child: const Text('Cancelar'),
+                      ),
+                    ),
+                    const SizedBox(width: 32),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          await controller.submit();
+                          if (controller.isFormValid) {
+                            navigateToCreateOrEditTodoPage(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(formState.formErrorMessage!),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(controller.buttonSubmitText),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             );
