@@ -13,6 +13,10 @@ class FetchTodosUseCase {
     try {
       final todoList = await repository.getTodos();
 
+      todoList.sort((TodoItemEntity a, TodoItemEntity b) {
+        return a.title.compareTo(b.title);
+      });
+
       return (null, todoList);
     } on DataUnavailableInRepositoryException {
       return (Failure('As tarefas não estão indisponíveis.'), null);

@@ -2,18 +2,29 @@ import '../../domain/entities/todo_item.dart';
 
 abstract class TodoState {}
 
-class TodoInitial extends TodoState {}
+class TodoStateInitial extends TodoState {}
 
-class TodoLoading extends TodoState {}
+class TodoStateLoading extends TodoState {}
 
-class TodoLoaded extends TodoState {
+class TodoStateLoaded extends TodoState {
   final List<TodoItemEntity> todos;
-  TodoLoaded(this.todos);
+
+  TodoStateLoaded(this.todos);
 }
 
-class TodoEmpty extends TodoState {}
-
-class TodoError extends TodoState {
+class TodoStateSuccess extends TodoStateLoaded {
   final String message;
-  TodoError(this.message);
+  TodoStateSuccess(super.todos, {required this.message});
 }
+
+class TodoStateFail extends TodoStateLoaded {
+  final String message;
+  TodoStateFail(super.todos, {required this.message});
+}
+
+class TodoStateUndo extends TodoStateLoaded {
+  final String message;
+  TodoStateUndo(super.todos, {required this.message});
+}
+
+class TodoStateEmpty extends TodoState {}

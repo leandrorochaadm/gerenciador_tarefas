@@ -40,6 +40,7 @@ Future<void> setupServiceLocator() async {
         updateTodoUseCase: getIt<UpdateTodoUseCase>(),
         deleteTodoUseCase: getIt<DeleteTodoUseCase>(),
       ));
+
   getIt.registerFactoryParam<TodoFormController, TodoItemEntity?, void>(
     (todoItem, _) => TodoFormController(
       createTodoUseCase: getIt<CreateTodoUseCase>(),

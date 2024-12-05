@@ -30,13 +30,78 @@ class TodoPage extends StatelessWidget {
         child: ValueListenableBuilder<TodoState>(
           valueListenable: controller,
           builder: (context, state, child) {
-            if (state is TodoInitial) {
+            if (state is TodoStateInitial) {
               return const Center(child: Text('Bem-vindo!'));
-            } else if (state is TodoLoading) {
+            } else if (state is TodoStateLoading) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state is TodoLoaded) {
+            } else if (state is TodoStateLoaded) {
+              if (state is TodoStateSuccess) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.blue,
+                      content: Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      duration: const Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                });
+              }
+
+              if (state is TodoStateFail) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      duration: const Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                });
+              }
+
+              if (state is TodoStateUndo) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.blue,
+                      content: const Text(
+                        'Tarefa foi concluida.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      action: SnackBarAction(
+                        label: 'Desfazer',
+                        textColor: Colors.yellowAccent,
+                        onPressed: () async {
+                          await controller.restoreLastDeletedTodo();
+                        },
+                      ),
+                      duration: const Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                });
+              }
+
               return _buildTodoList(context, state.todos);
-            } else if (state is TodoEmpty) {
+            } else if (state is TodoStateEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -66,26 +131,24 @@ class TodoPage extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (state is TodoError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      state.message,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: controller.fetchTodos,
-                      child: const Text('Tentar Novamente'),
-                    ),
-                  ],
-                ),
-              );
             }
 
-            return const SizedBox();
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Ocorreu um erro ao carregar as tarefas.',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: controller.fetchTodos,
+                    child: const Text('Tentar Novamente'),
+                  ),
+                ],
+              ),
+            );
           },
         ),
       ),
@@ -121,30 +184,7 @@ class TodoPage extends StatelessWidget {
                   ? 'Marcar como pendente'
                   : 'Marcar como concluída',
               onPressed: () {
-                controller.deleteTodo(todo);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: Colors.blue,
-                    content: Text(
-                      'Tarefa "${todo.title}" foi finalizada.',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    action: SnackBarAction(
-                      label: 'Desfazer',
-                      textColor: Colors.yellowAccent, // Contraste com o fundo
-                      onPressed: () async {
-                        await controller.restoreLastDeletedTodo();
-                      },
-                    ),
-                    duration: const Duration(seconds: 4),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    margin: const EdgeInsets.all(16),
-                  ),
-                );
+                controller.finishTodo(todo);
               },
             ),
             title: Text(
@@ -156,7 +196,7 @@ class TodoPage extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              todo.description,
+              todo.id.toString(),
               style: TextStyle(
                 color: todo.isDone ? Colors.grey : Colors.black87,
               ),
@@ -209,8 +249,9 @@ void _showDeleteTodoModal(
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Text(
-            'Você tem certeza que deseja excluir a tarefa "${todo.title}"?',
+            'Essa ação não pode ser desfeita. Tem certeza que deseja excluir a tarefa "${todo.title}"?',
             style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.justify,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -231,25 +272,9 @@ void _showDeleteTodoModal(
                 ),
               ),
               onPressed: () async {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-
                 await controller.deleteTodo(todo);
 
                 Navigator.pop(context);
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tarefa excluída com sucesso.'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
               },
               child: const Text('Excluir'),
             ),

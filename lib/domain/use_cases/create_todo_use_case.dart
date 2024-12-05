@@ -7,14 +7,19 @@ class CreateTodoUseCase {
   final TodoRepository repository;
 
   CreateTodoUseCase(this.repository);
-  Future<Failure?> call(String title,
-      {String? description, bool? isDone}) async {
+  Future<Failure?> call(
+    String title, {
+    String? description,
+    bool? isDone,
+    int? id,
+  }) async {
     if (title.isEmpty) {
       return Failure('O título é obrigatório.');
     }
 
     try {
       final todo = TodoItemEntity(
+        id: id,
         title: title,
         description: description,
         isDone: isDone,
