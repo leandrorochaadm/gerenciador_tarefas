@@ -23,4 +23,18 @@ class TodoItemEntity {
       isDone: todoItemModel.isDone,
     );
   }
+
+  TodoItemEntity copyWith({
+    int? id,
+    String? title,
+    String? description,
+    bool? isDone,
+  }) {
+    return TodoItemEntity(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      isDone: isDone ?? this.isDone,
+    );
+  }
 }

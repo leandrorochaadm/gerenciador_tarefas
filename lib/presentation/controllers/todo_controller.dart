@@ -22,6 +22,8 @@ class TodoController extends ValueNotifier<TodoState> {
     fetchTodos();
   }
 
+  TodoItemEntity? _lastDeletedTodo; // Armazena a última tarefa excluída
+
   Future<void> fetchTodos() async {
     value = TodoLoading();
     final result = await fetchTodosUseCase();
@@ -71,14 +73,33 @@ class TodoController extends ValueNotifier<TodoState> {
     }
   }
 
-  Future<void> deleteTodo(int todoId) async {
+  Future<void> deleteTodo(TodoItemEntity todo) async {
+    _lastDeletedTodo = todo;
     value = TodoLoading();
-    final failure = await deleteTodoUseCase(todoId);
+    final failure = await deleteTodoUseCase(todo.id);
 
     if (failure != null) {
       value = TodoError(failure.message);
     } else {
       await fetchTodos();
+    }
+  }
+
+  Future<void> restoreLastDeletedTodo() async {
+    if (_lastDeletedTodo != null) {
+      value = TodoLoading();
+      final failure = await createTodoUseCase(
+        _lastDeletedTodo!.title,
+        description: _lastDeletedTodo!.description,
+        isDone: _lastDeletedTodo!.isDone,
+      );
+
+      if (failure != null) {
+        value = TodoError(failure.message);
+      } else {
+        _lastDeletedTodo = null;
+        await fetchTodos();
+      }
     }
   }
 }

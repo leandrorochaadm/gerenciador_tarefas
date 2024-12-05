@@ -16,7 +16,14 @@ class TodoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tarefas'),
+        title: const Text(
+          'Tarefas',
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 4,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,7 +37,35 @@ class TodoPage extends StatelessWidget {
             } else if (state is TodoLoaded) {
               return _buildTodoList(context, state.todos);
             } else if (state is TodoEmpty) {
-              return const Center(child: Text('Nenhuma tarefa encontrada.'));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 80,
+                      color: Colors.blue[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nenhuma tarefa encontrada.',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.blue[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Adicione novas tarefas para começar!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.blue[500],
+                      ),
+                    ),
+                  ],
+                ),
+              );
             } else if (state is TodoError) {
               return Center(
                 child: Column(
@@ -72,28 +107,75 @@ class TodoPage extends StatelessWidget {
       itemBuilder: (context, index) {
         final todo = todos[index];
         return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: ListTile(
-            leading: Icon(
-              todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: todo.isDone ? Colors.green : Colors.orange,
+            leading: IconButton(
+              icon: Icon(
+                todo.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: todo.isDone ? Colors.green : Colors.blue,
+              ),
+              tooltip: todo.isDone
+                  ? 'Marcar como pendente'
+                  : 'Marcar como concluída',
+              onPressed: () {
+                controller.deleteTodo(todo);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.blue,
+                    content: Text(
+                      'Tarefa "${todo.title}" foi finalizada.',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    action: SnackBarAction(
+                      label: 'Desfazer',
+                      textColor: Colors.yellowAccent, // Contraste com o fundo
+                      onPressed: () async {
+                        await controller.restoreLastDeletedTodo();
+                      },
+                    ),
+                    duration: const Duration(seconds: 4),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.all(16),
+                  ),
+                );
+              },
             ),
-            title: Text(todo.title),
-            subtitle: Text(todo.description),
+            title: Text(
+              todo.title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: todo.isDone ? Colors.grey : Colors.black,
+                decoration: todo.isDone ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            subtitle: Text(
+              todo.description,
+              style: TextStyle(
+                color: todo.isDone ? Colors.grey : Colors.black87,
+              ),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
+                  tooltip: 'Editar tarefa',
                   onPressed: () {
-                    final controller = getIt<TodoFormController>(param1: todo);
-
-                    navigateToCreateOrEditTodoPage(context, controller);
+                    final formController =
+                        getIt<TodoFormController>(param1: todo);
+                    navigateToCreateOrEditTodoPage(context, formController);
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: 'Excluir tarefa',
                   onPressed: () {
                     _showDeleteTodoModal(context, controller, todo);
                   },
@@ -112,42 +194,69 @@ void _showDeleteTodoModal(
   TodoController controller,
   TodoItemEntity todo,
 ) {
-  Navigator.of(context).push(
-    PageRouteBuilder(
-      opaque: false,
-      barrierColor: Colors.black54,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            ),
-            child: AlertDialog(
-              title: const Text('Confirmar Exclusão'),
-              content: Text(
-                  'Você tem certeza que deseja excluir a tarefa "${todo.title}"?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    controller.deleteTodo(todo.id);
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Excluir'),
-                ),
-              ],
-            ),
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return FadeTransition(
+        opacity: CurvedAnimation(
+          parent: ModalRoute.of(context)!.animation!,
+          curve: Curves.easeInOut,
+        ),
+        child: AlertDialog(
+          title: const Text(
+            'Confirmar Exclusão',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-        );
-      },
-    ),
+          content: Text(
+            'Você tem certeza que deseja excluir a tarefa "${todo.title}"?',
+            style: const TextStyle(fontSize: 16),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () async {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                await controller.deleteTodo(todo);
+
+                Navigator.pop(context);
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tarefa excluída com sucesso.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: const Text('Excluir'),
+            ),
+          ],
+        ),
+      );
+    },
   );
 }
 

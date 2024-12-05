@@ -17,7 +17,16 @@ class CreateOrEditTodoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(controller.appBarTitle)),
+      appBar: AppBar(
+        title: Text(
+          controller.appBarTitle,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 4,
+        backgroundColor: Colors.blueAccent,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ValueListenableBuilder<TodoFormState>(
@@ -120,8 +129,8 @@ class CreateOrEditTodoPage extends StatelessWidget {
                     Switch.adaptive(
                       value: formState.isDone,
                       onChanged: controller.toggleIsDone,
-                      activeColor: Colors.green,
-                      activeTrackColor: Colors.greenAccent,
+                      activeColor: Colors.blue,
+                      activeTrackColor: Colors.blueAccent,
                       inactiveThumbColor: Colors.grey,
                       inactiveTrackColor: Colors.grey[300],
                     ),
@@ -133,8 +142,11 @@ class CreateOrEditTodoPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
+                        style: FilledButton.styleFrom(
+                          foregroundColor: Colors.blueAccent,
+                        ),
                         onPressed: () async {
-                          navigateToCreateOrEditTodoPage(context);
+                          navigateToTodoPage(context);
                         },
                         child: const Text('Cancelar'),
                       ),
@@ -142,10 +154,13 @@ class CreateOrEditTodoPage extends StatelessWidget {
                     const SizedBox(width: 32),
                     Expanded(
                       child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                        ),
                         onPressed: () async {
                           await controller.submit();
                           if (controller.isFormValid) {
-                            navigateToCreateOrEditTodoPage(context);
+                            navigateToTodoPage(context);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -169,7 +184,7 @@ class CreateOrEditTodoPage extends StatelessWidget {
   }
 }
 
-Future<void> navigateToCreateOrEditTodoPage(BuildContext context) async {
+Future<void> navigateToTodoPage(BuildContext context) async {
   await Navigator.of(context).pushReplacement(
     PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) {
