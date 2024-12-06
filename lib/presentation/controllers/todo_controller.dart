@@ -7,6 +7,8 @@ import '../../domain/use_cases/fetch_todos_use_case.dart';
 import '../../domain/use_cases/update_todo_use_case.dart';
 import '../states/todo_state.dart';
 
+enum TypeMessage { success, fail, undo }
+
 class TodoController extends ValueNotifier<TodoState> {
   final FetchTodosUseCase fetchTodosUseCase;
   final CreateTodoUseCase createTodoUseCase;
@@ -23,25 +25,28 @@ class TodoController extends ValueNotifier<TodoState> {
   }
 
   TodoItemEntity? _lastDeletedTodo; // Armazena a última tarefa excluída
-  List<TodoItemEntity> _lastTodos = []; // Armazena a última lista de tarefas
+
+  /// Callback para exibir mensagens na UI.
+  void Function(
+    String message,
+    TypeMessage type,
+  )? onMessage;
 
   Future<void> fetchTodos() async {
     value = TodoStateLoading();
     final (failure, todos) = await fetchTodosUseCase();
 
     if (todos == null || todos.isEmpty) {
-      _lastTodos = [];
       value = TodoStateEmpty();
       return;
     }
 
     if (failure != null) {
-      value = TodoStateFail(_lastTodos, message: failure.message);
+      onMessage?.call(failure.message, TypeMessage.fail);
       return;
     }
 
     if (todos.isNotEmpty) {
-      _lastTodos = todos;
       value = TodoStateLoaded(todos);
       return;
     }
@@ -50,7 +55,7 @@ class TodoController extends ValueNotifier<TodoState> {
   Future<void> createTodo(String title,
       {String? description, bool? isDone}) async {
     if (title.isEmpty) {
-      value = TodoStateFail(_lastTodos, message: 'O título é obrigatório.');
+      onMessage?.call('O título é obrigatório.', TypeMessage.fail);
       return;
     }
 
@@ -59,7 +64,7 @@ class TodoController extends ValueNotifier<TodoState> {
         description: description, isDone: isDone);
 
     if (failure != null) {
-      value = TodoStateFail(_lastTodos, message: failure.message);
+      onMessage?.call(failure.message, TypeMessage.fail);
     } else {
       await fetchTodos();
     }
@@ -67,7 +72,7 @@ class TodoController extends ValueNotifier<TodoState> {
 
   Future<void> updateTodo(TodoItemEntity todo) async {
     if (todo.title.isEmpty) {
-      value = TodoStateFail(_lastTodos, message: 'O título é obrigatório.');
+      onMessage?.call('O título é obrigatório.', TypeMessage.fail);
       return;
     }
 
@@ -75,8 +80,10 @@ class TodoController extends ValueNotifier<TodoState> {
     final failure = await updateTodoUseCase(todo);
 
     if (failure != null) {
-      value = TodoStateFail(_lastTodos, message: failure.message);
+      onMessage?.call(failure.message, TypeMessage.fail);
     } else {
+      onMessage?.call(
+          'Tarefa "${todo.title}" foi atualizada.', TypeMessage.success);
       await fetchTodos();
     }
   }
@@ -88,9 +95,12 @@ class TodoController extends ValueNotifier<TodoState> {
     final failure = await deleteTodoUseCase(todo.id);
 
     if (failure != null) {
-      value = TodoStateFail(_lastTodos, message: failure.message);
+      onMessage?.call(failure.message, TypeMessage.fail);
       return;
     }
+
+    onMessage?.call(
+        'Tarefa "${todo.title}" foi excluida.', TypeMessage.success);
 
     await fetchTodos();
   }
@@ -102,22 +112,20 @@ class TodoController extends ValueNotifier<TodoState> {
     final failure = await deleteTodoUseCase(todo.id);
 
     if (failure != null) {
-      value = TodoStateFail(_lastTodos,
-          message: 'Não foi possível finalizar a tarefa ${todo.title}.');
+      onMessage?.call('Não foi possível finalizar a tarefa ${todo.title}.',
+          TypeMessage.fail);
       return;
     }
 
-    await fetchTodos();
+    onMessage?.call('Tarefa "${todo.title}" foi finalizada.', TypeMessage.undo);
 
-    value = TodoStateUndo(
-      _lastTodos,
-      message: 'Tarefa "${todo.title}" foi finalizada.',
-    );
+    await fetchTodos();
   }
 
   Future<void> restoreLastDeletedTodo() async {
     if (_lastDeletedTodo != null) {
       value = TodoStateLoading();
+
       final failure = await createTodoUseCase(
         _lastDeletedTodo!.title,
         id: _lastDeletedTodo!.id,
@@ -126,11 +134,15 @@ class TodoController extends ValueNotifier<TodoState> {
       );
 
       if (failure != null) {
-        value = TodoStateFail(_lastTodos, message: failure.message);
+        onMessage?.call(failure.message, TypeMessage.fail);
         return;
       }
 
       if (failure == null) {
+        onMessage?.call(
+          'Tarefa "${_lastDeletedTodo!.title}" foi restaurada.',
+          TypeMessage.success,
+        );
         _lastDeletedTodo = null;
         await fetchTodos();
         return;

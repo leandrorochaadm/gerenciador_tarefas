@@ -4,7 +4,6 @@ class TodoFormState {
   final String description;
   final String? descriptionError;
   final bool isDone;
-  final String? formErrorMessage;
 
   TodoFormState({
     this.title = '',
@@ -12,7 +11,6 @@ class TodoFormState {
     this.description = '',
     this.descriptionError,
     this.isDone = false,
-    this.formErrorMessage,
   });
 
   TodoFormState copyWith({
@@ -21,7 +19,6 @@ class TodoFormState {
     String? description,
     String? descriptionError,
     bool? isDone,
-    String? formErrorMessage,
   }) {
     return TodoFormState(
       title: title ?? this.title,
@@ -29,7 +26,6 @@ class TodoFormState {
       description: description ?? this.description,
       descriptionError: descriptionError,
       isDone: isDone ?? this.isDone,
-      formErrorMessage: formErrorMessage,
     );
   }
 }

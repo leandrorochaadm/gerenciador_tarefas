@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:inicie/setup_service_locator.dart';
 
 import '../../domain/entities/todo_item.dart';
+import '../../setup_service_locator.dart';
 import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_state.dart';
@@ -30,76 +30,46 @@ class TodoPage extends StatelessWidget {
         child: ValueListenableBuilder<TodoState>(
           valueListenable: controller,
           builder: (context, state, child) {
+            controller.onMessage = (String message, TypeMessage type) {
+              Color colorBackground = Colors.transparent;
+              if (type == TypeMessage.success) {
+                colorBackground = Colors.green;
+              }
+              if (type == TypeMessage.fail) {
+                colorBackground = Colors.red;
+              }
+              if (type == TypeMessage.undo) {
+                colorBackground = Colors.blue;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: colorBackground,
+                  content: Text(message,
+                      style: const TextStyle(color: Colors.white)),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  margin: const EdgeInsets.all(16),
+                  action: type == TypeMessage.undo
+                      ? SnackBarAction(
+                          label: 'Desfazer',
+                          textColor: Colors.yellowAccent,
+                          onPressed: () async {
+                            await controller.restoreLastDeletedTodo();
+                          },
+                        )
+                      : null,
+                ),
+              );
+            };
+
             if (state is TodoStateInitial) {
               return const Center(child: Text('Bem-vindo!'));
             } else if (state is TodoStateLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is TodoStateLoaded) {
-              if (state is TodoStateSuccess) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.blue,
-                      content: Text(
-                        state.message,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      duration: const Duration(seconds: 4),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
-                });
-              }
-
-              if (state is TodoStateFail) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Text(
-                        state.message,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      duration: const Duration(seconds: 4),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
-                });
-              }
-
-              if (state is TodoStateUndo) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.blue,
-                      content: const Text(
-                        'Tarefa foi concluida.',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      action: SnackBarAction(
-                        label: 'Desfazer',
-                        textColor: Colors.yellowAccent,
-                        onPressed: () async {
-                          await controller.restoreLastDeletedTodo();
-                        },
-                      ),
-                      duration: const Duration(seconds: 4),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      margin: const EdgeInsets.all(16),
-                    ),
-                  );
-                });
-              }
-
               return _buildTodoList(context, state.todos);
             } else if (state is TodoStateEmpty) {
               return Center(
@@ -196,7 +166,8 @@ class TodoPage extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              todo.id.toString(),
+              todo.description,
+              textAlign: TextAlign.justify,
               style: TextStyle(
                 color: todo.isDone ? Colors.grey : Colors.black87,
               ),
@@ -295,9 +266,9 @@ void navigateToCreateOrEditTodoPage(
         return CreateOrEditTodoPage(controller: controller);
       },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); // Começa de baixo para cima
-        const end = Offset.zero; // Termina na posição original
-        const curve = Curves.easeInOut; // Curva de animação suave
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
 
         var tween =
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));

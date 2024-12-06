@@ -5,6 +5,7 @@ import '../../setup_service_locator.dart';
 import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_form_state.dart';
+import '../widget/custom_text_field_widget.dart';
 
 class CreateOrEditTodoPage extends StatelessWidget {
   final TodoFormController controller;
@@ -16,12 +17,28 @@ class CreateOrEditTodoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    controller.onMessage = (message) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor:
+              message.contains('sucesso') ? Colors.green : Colors.redAccent,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    };
+
+    controller.onNavigatorBack = () => navigateToTodoPage(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           controller.appBarTitle,
           style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         elevation: 4,
@@ -31,91 +48,26 @@ class CreateOrEditTodoPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ValueListenableBuilder<TodoFormState>(
           valueListenable: controller,
-          builder: (context, formState, _) {
+          builder: (context, state, _) {
             return Column(
               children: [
-                TextFormField(
+                CustomTextFieldWidget(
+                  label: 'Título',
+                  hint: 'Digite o título da tarefa',
+                  initialValue: state.title,
+                  errorText: state.titleError,
                   onChanged: controller.updateTitle,
-                  initialValue: formState.title,
-                  decoration: InputDecoration(
-                    labelText: 'Título',
-                    labelStyle:
-                        const TextStyle(fontSize: 16, color: Colors.grey),
-                    hintText: 'Digite o título da tarefa',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    errorText: formState.titleError,
-                    errorStyle:
-                        const TextStyle(color: Colors.redAccent, fontSize: 14),
-                    prefixIcon:
-                        const Icon(Icons.title, color: Colors.blueAccent),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.grey, width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.blueAccent, width: 2),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.redAccent, width: 2),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.redAccent, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 16),
-                  ),
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                  prefixIcon: Icons.title,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                CustomTextFieldWidget(
+                  label: 'Descrição',
+                  hint: 'Digite a descrição aqui',
+                  initialValue: state.description,
                   onChanged: controller.updateDescription,
-                  initialValue: formState.description,
-                  decoration: InputDecoration(
-                    labelText: 'Descrição',
-                    labelStyle:
-                        const TextStyle(fontSize: 16, color: Colors.grey),
-                    hintText: 'Digite a descrição aqui',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    errorText: formState.descriptionError,
-                    errorStyle: const TextStyle(color: Colors.redAccent),
-                    prefixIcon:
-                        const Icon(Icons.description, color: Colors.blueAccent),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.grey, width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.blueAccent, width: 2),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.redAccent, width: 2),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Colors.redAccent, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 16),
-                  ),
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                  maxLines: 3,
+                  errorText: state.descriptionError,
+                  isMultiline: true,
+                  prefixIcon: Icons.description,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -126,9 +78,7 @@ class CreateOrEditTodoPage extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           foregroundColor: Colors.blueAccent,
                         ),
-                        onPressed: () async {
-                          navigateToTodoPage(context);
-                        },
+                        onPressed: controller.onNavigatorBack,
                         child: const Text('Cancelar'),
                       ),
                     ),
@@ -140,16 +90,6 @@ class CreateOrEditTodoPage extends StatelessWidget {
                         ),
                         onPressed: () async {
                           await controller.submit();
-                          if (controller.isFormValid) {
-                            navigateToTodoPage(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(formState.formErrorMessage!),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
                         },
                         child: Text(controller.buttonSubmitText),
                       ),
@@ -172,9 +112,9 @@ Future<void> navigateToTodoPage(BuildContext context) async {
         return TodoPage(controller: getIt.get<TodoController>());
       },
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0); // Começa de baixo para cima
-        const end = Offset.zero; // Termina na posição original
-        const curve = Curves.easeInOut; // Curva de animação suave
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
 
         var tween =
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
