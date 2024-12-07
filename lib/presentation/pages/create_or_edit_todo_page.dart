@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:inicie/presentation/pages/todo_page.dart';
 
-import '../../setup_service_locator.dart';
-import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_form_state.dart';
 import '../utils/snack_helper.dart';
@@ -10,10 +7,12 @@ import '../widget/custom_text_field_widget.dart';
 
 class CreateOrEditTodoPage extends StatelessWidget {
   final TodoFormController controller;
+  final Function onPopCallBack;
 
   const CreateOrEditTodoPage({
     super.key,
     required this.controller,
+    required this.onPopCallBack,
   });
 
   @override
@@ -26,7 +25,10 @@ class CreateOrEditTodoPage extends StatelessWidget {
       );
     };
 
-    controller.onNavigatorBack = () => navigateToTodoPage(context);
+    controller.onNavigatorBack = () {
+      onPopCallBack();
+      Navigator.pop(context);
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -101,31 +103,4 @@ class CreateOrEditTodoPage extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<void> navigateToTodoPage(BuildContext context) async {
-  await Navigator.of(context).pushReplacement(
-    PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return TodoPage(controller: getIt.get<TodoController>());
-      },
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0);
-        const end = Offset.zero;
-        const curve = Curves.easeInOut;
-
-        var tween =
-            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween);
-
-        return SlideTransition(
-          position: offsetAnimation,
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-        );
-      },
-    ),
-  );
 }
