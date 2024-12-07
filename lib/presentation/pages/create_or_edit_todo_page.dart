@@ -43,6 +43,7 @@ class CreateOrEditTodoPage extends StatelessWidget {
         centerTitle: true,
         elevation: 4,
         backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -74,20 +75,14 @@ class CreateOrEditTodoPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Expanded(
-                      child: ElevatedButton(
-                        style: FilledButton.styleFrom(
-                          foregroundColor: Colors.blueAccent,
-                        ),
-                        onPressed: controller.onNavigatorBack,
-                        child: const Text('Cancelar'),
-                      ),
-                    ),
-                    const SizedBox(width: 32),
-                    Expanded(
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                        ),
+                            backgroundColor: Colors.blueAccent,
+                            fixedSize: const Size(60, 60),
+                            textStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            )),
                         onPressed: () async {
                           await controller.submit();
                         },

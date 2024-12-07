@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:inicie/presentation/utils/snack_helper.dart';
 
 import '../../domain/entities/todo_item.dart';
 import '../../setup_service_locator.dart';
@@ -7,6 +6,7 @@ import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_state.dart';
 import '../utils/color_helper.dart';
+import '../utils/snack_helper.dart';
 import '../utils/type_message_enum.dart';
 import 'create_or_edit_todo_page.dart';
 
