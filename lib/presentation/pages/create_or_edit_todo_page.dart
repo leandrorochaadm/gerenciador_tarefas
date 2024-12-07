@@ -5,6 +5,7 @@ import '../../setup_service_locator.dart';
 import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_form_state.dart';
+import '../utils/snack_helper.dart';
 import '../widget/custom_text_field_widget.dart';
 
 class CreateOrEditTodoPage extends StatelessWidget {
@@ -17,14 +18,11 @@ class CreateOrEditTodoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    controller.onMessage = (message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor:
-              message.contains('sucesso') ? Colors.green : Colors.redAccent,
-          duration: const Duration(seconds: 2),
-        ),
+    controller.onMessage = (message, type) {
+      SnackBarHelper.show(
+        context,
+        message: message,
+        type: type,
       );
     };
 

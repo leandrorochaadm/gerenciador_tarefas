@@ -6,6 +6,7 @@ import '../../domain/use_cases/create_todo_use_case.dart';
 import '../../domain/use_cases/update_todo_use_case.dart';
 import '../../domain/use_cases/validate_todo_form_use_case.dart';
 import '../states/todo_form_state.dart';
+import '../utils/type_message_enum.dart';
 
 class TodoFormController extends ValueNotifier<TodoFormState> {
   final ValidateTodoFormUseCase validateTodoFormUseCase;
@@ -14,7 +15,7 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
   final TodoItemEntity? todoItem;
 
   /// Callback opcional para exibir mensagens na UI.
-  void Function(String message)? onMessage;
+  void Function(String message, TypeMessage type)? onMessage;
   void Function()? onNavigatorBack;
 
   TodoFormController({
@@ -75,7 +76,7 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
     }
 
     if (failure != null) {
-      onMessage?.call(failure.message);
+      onMessage?.call(failure.message, TypeMessage.fail);
       return;
     }
 
@@ -83,7 +84,7 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
         ? 'Tarefa criada com sucesso!'
         : 'Tarefa atualizada com sucesso!';
 
-    onMessage?.call(successMessage);
+    onMessage?.call(successMessage, TypeMessage.success);
     onNavigatorBack?.call();
   }
 
@@ -100,7 +101,7 @@ class TodoFormController extends ValueNotifier<TodoFormState> {
         titleError: titleError,
         descriptionError: descriptionError,
       );
-      onMessage?.call('Por favor, verifique os campos.');
+      onMessage?.call('Por favor, verifique os campos.', TypeMessage.success);
       return false;
     }
     return true;

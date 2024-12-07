@@ -6,8 +6,7 @@ import '../../domain/use_cases/delete_todo_use_case.dart';
 import '../../domain/use_cases/fetch_todos_use_case.dart';
 import '../../domain/use_cases/update_todo_use_case.dart';
 import '../states/todo_state.dart';
-
-enum TypeMessage { success, fail, undo }
+import '../utils/type_message_enum.dart';
 
 class TodoController extends ValueNotifier<TodoState> {
   final FetchTodosUseCase fetchTodosUseCase;
@@ -27,10 +26,7 @@ class TodoController extends ValueNotifier<TodoState> {
   TodoItemEntity? _lastDeletedTodo; // Armazena a última tarefa excluída
 
   /// Callback para exibir mensagens na UI.
-  void Function(
-    String message,
-    TypeMessage type,
-  )? onMessage;
+  void Function(String message, TypeMessage type)? onMessage;
 
   Future<void> fetchTodos() async {
     value = TodoStateLoading();

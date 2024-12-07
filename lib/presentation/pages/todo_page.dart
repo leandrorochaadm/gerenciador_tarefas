@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:inicie/presentation/utils/snack_helper.dart';
 
 import '../../domain/entities/todo_item.dart';
 import '../../setup_service_locator.dart';
 import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_state.dart';
+import '../utils/color_helper.dart';
+import '../utils/type_message_enum.dart';
 import 'create_or_edit_todo_page.dart';
 
 class TodoPage extends StatelessWidget {
@@ -30,38 +33,14 @@ class TodoPage extends StatelessWidget {
         child: ValueListenableBuilder<TodoState>(
           valueListenable: controller,
           builder: (context, state, child) {
-            controller.onMessage = (String message, TypeMessage type) {
-              Color colorBackground = Colors.transparent;
-              if (type == TypeMessage.success) {
-                colorBackground = Colors.green;
-              }
-              if (type == TypeMessage.fail) {
-                colorBackground = Colors.red;
-              }
-              if (type == TypeMessage.undo) {
-                colorBackground = Colors.blue;
-              }
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: colorBackground,
-                  content: Text(message,
-                      style: const TextStyle(color: Colors.white)),
-                  duration: const Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  margin: const EdgeInsets.all(16),
-                  action: type == TypeMessage.undo
-                      ? SnackBarAction(
-                          label: 'Desfazer',
-                          textColor: Colors.yellowAccent,
-                          onPressed: () async {
-                            await controller.restoreLastDeletedTodo();
-                          },
-                        )
-                      : null,
-                ),
+            controller.onMessage = (message, type) {
+              SnackBarHelper.show(
+                context,
+                message: message,
+                type: type,
+                onUndo: type == TypeMessage.undo
+                    ? controller.restoreLastDeletedTodo
+                    : null,
               );
             };
 
@@ -129,6 +108,28 @@ class TodoPage extends StatelessWidget {
           navigateToCreateOrEditTodoPage(context, controller);
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void snackBarCustom(TypeMessage type, BuildContext context, String message) {
+    final colorBackground = ColorHelper.getColorForType(type);
+
+    final snackBarAction = type == TypeMessage.undo
+        ? SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.yellowAccent,
+            onPressed: () async => await controller.restoreLastDeletedTodo(),
+          )
+        : null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: colorBackground,
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        action: snackBarAction,
       ),
     );
   }

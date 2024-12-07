@@ -1,6 +1,8 @@
 class ValidateTodoFormUseCase {
   String? validateTitle(String title) {
+    title = title.trim();
     if (title.isEmpty) return 'O título é obrigatório.';
+    if (title.length <= 3) return 'O título deve ter pelo menos 3 caracteres.';
     if (title.length > 50) return 'O título não pode exceder 50 caracteres.';
     return null;
   }
