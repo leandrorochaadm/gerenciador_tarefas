@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_form_state.dart';
+import '../utils/app_bar_custom_widget.dart';
 import '../utils/snack_helper.dart';
 import '../widget/custom_text_field_widget.dart';
 
@@ -31,20 +32,7 @@ class CreateOrEditTodoPage extends StatelessWidget {
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          controller.appBarTitle,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        elevation: 4,
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBarCustomWidget(controller.appBarTitle),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ValueListenableBuilder<TodoFormState>(

@@ -5,7 +5,7 @@ import '../../setup_service_locator.dart';
 import '../controllers/todo_controller.dart';
 import '../controllers/todo_form_controller.dart';
 import '../states/todo_state.dart';
-import '../utils/color_helper.dart';
+import '../utils/app_bar_custom_widget.dart';
 import '../utils/snack_helper.dart';
 import '../utils/type_message_enum.dart';
 import 'create_or_edit_todo_page.dart';
@@ -18,16 +18,7 @@ class TodoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Tarefas',
-          style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
-        ),
-        centerTitle: true,
-        elevation: 4,
-        backgroundColor: Colors.blueAccent,
-      ),
+      appBar: const AppBarCustomWidget('Tarefas'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ValueListenableBuilder<TodoState>(
@@ -51,93 +42,32 @@ class TodoPage extends StatelessWidget {
             } else if (state is TodoStateLoaded) {
               return _buildTodoList(context, state.todos);
             } else if (state is TodoStateEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.inbox_outlined,
-                      size: 80,
-                      color: Colors.blue[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Nenhuma tarefa encontrada.',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.blue[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Adicione novas tarefas para começar!',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue[500],
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return const EmptyWidget();
             }
 
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Ocorreu um erro ao carregar as tarefas.',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: controller.fetchTodos,
-                    child: const Text('Tentar Novamente'),
-                  ),
-                ],
-              ),
-            );
+            return ErrorWidget(controller: controller);
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final todoFormController = getIt<TodoFormController>();
-
-          Navigator.push(context, MaterialPageRoute(
-            builder: (context) {
-              return CreateOrEditTodoPage(
-                controller: todoFormController,
-                onPopCallBack: controller.fetchTodos,
-              );
-            },
-          ));
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: buttonAddWidget(context),
     );
   }
 
-  void snackBarCustom(TypeMessage type, BuildContext context, String message) {
-    final colorBackground = ColorHelper.getColorForType(type);
+  FloatingActionButton buttonAddWidget(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        final todoFormController = getIt<TodoFormController>();
 
-    final snackBarAction = type == TypeMessage.undo
-        ? SnackBarAction(
-            label: 'Desfazer',
-            textColor: Colors.yellowAccent,
-            onPressed: () async => await controller.restoreLastDeletedTodo(),
-          )
-        : null;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: colorBackground,
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        action: snackBarAction,
-      ),
+        Navigator.push(context, MaterialPageRoute(
+          builder: (context) {
+            return CreateOrEditTodoPage(
+              controller: todoFormController,
+              onPopCallBack: controller.fetchTodos,
+            );
+          },
+        ));
+      },
+      child: const Icon(Icons.add),
     );
   }
 
@@ -215,6 +145,74 @@ class TodoPage extends StatelessWidget {
   }
 }
 
+class ErrorWidget extends StatelessWidget {
+  const ErrorWidget({
+    super.key,
+    required this.controller,
+  });
+
+  final TodoController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Ocorreu um erro ao carregar as tarefas.',
+            style: TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: controller.fetchTodos,
+            child: const Text('Tentar Novamente'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EmptyWidget extends StatelessWidget {
+  const EmptyWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 80,
+            color: Colors.blue[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Nenhuma tarefa encontrada.',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.blue[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Adicione novas tarefas para começar!',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.blue[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 void _showDeleteTodoModal(
   BuildContext context,
   TodoController controller,
@@ -235,7 +233,7 @@ void _showDeleteTodoModal(
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Text(
-            'Essa ação não pode ser desfeita. Tem certeza que deseja excluir a tarefa "${todo.title}"?',
+            'Essa ação não pode ser desfeita.\n\nTem certeza que deseja excluir a tarefa "${todo.title}"?',
             style: const TextStyle(fontSize: 16),
             textAlign: TextAlign.justify,
           ),
